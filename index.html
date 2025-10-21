@@ -1657,8 +1657,8 @@
     const particlesContainer = document.getElementById('particles');
     const floatingAction = document.getElementById('floatingAction');
     const blogCategories = document.querySelectorAll('.blog-category');
-
-const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
+// Updated
+const response = await fetch('https://backend-70fc.onrender.com/api/health');
 
     // Sample Data
     const projectsData = [

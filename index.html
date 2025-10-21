@@ -1099,6 +1099,18 @@
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: rgba(26, 26, 46, 0.95);
+                flex-direction: column;
+                padding: 2rem;
+                text-align: center;
+            }
+
+            body.light-mode .nav-links {
+                background: rgba(255, 255, 255, 0.95);
             }
 
             .mobile-menu {
@@ -1134,7 +1146,7 @@
             transform: translateY(0);
         }
 
-        /* New Blog Enhancements */
+        /* Blog Section */
         .blog-categories {
             display: flex;
             justify-content: center;
@@ -1202,7 +1214,7 @@
             gap: 0.5rem;
         }
 
-        /* New Interactive Elements */
+        /* Interactive Elements */
         .interactive-card {
             position: relative;
             overflow: hidden;
@@ -1225,7 +1237,7 @@
             opacity: 1;
         }
 
-        /* New Floating Action Button */
+        /* Floating Action Button */
         .floating-action {
             position: fixed;
             bottom: 2rem;
@@ -1243,6 +1255,7 @@
             transition: var(--transition);
             box-shadow: 0 10px 25px rgba(108, 99, 255, 0.3);
             z-index: 100;
+            display: none;
         }
 
         .floating-action:hover {
@@ -1250,7 +1263,7 @@
             box-shadow: 0 15px 30px rgba(108, 99, 255, 0.4);
         }
 
-        /* New Gradient Text Effect */
+        /* Gradient Text Effect */
         .gradient-text {
             background: linear-gradient(45deg, var(--primary), var(--accent), var(--secondary));
             -webkit-background-clip: text;
@@ -1265,7 +1278,7 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* Enhanced Blog Section */
+        /* Blog Section */
         .blog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -1397,10 +1410,10 @@
             <a href="#blog">Blog</a>
         </div>
         <div class="nav-actions">
-            <button class="theme-toggle" id="themeToggle">
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode">
                 <i class="fas fa-moon"></i>
             </button>
-            <button class="mobile-menu">
+            <button class="mobile-menu" aria-label="Toggle navigation menu">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
@@ -1643,7 +1656,7 @@
         <i class="fas fa-arrow-up"></i>
     </div>
 
-    script>
+    <script>
     // DOM Elements
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
@@ -1882,7 +1895,7 @@
         }
     });
 
-    // Mobile Menu Toggle - NEW FUNCTIONALITY
+    // Mobile Menu Toggle
     mobileMenu.addEventListener('click', () => {
         navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
         mobileMenu.querySelector('i').classList.toggle('fa-bars');
@@ -1929,20 +1942,6 @@
         });
     };
 
-    // Throttle function for performance
-    function throttle(func, limit) {
-        let inThrottle;
-        return function() {
-            const args = arguments;
-            const context = this;
-            if (!inThrottle) {
-                func.apply(context, args);
-                inThrottle = true;
-                setTimeout(() => inThrottle = false, limit);
-            }
-        }
-    }
-
     // Initialize animations on page load
     window.addEventListener('load', () => {
         animateSkillBars();
@@ -1951,25 +1950,9 @@
         typeWriter();
         loadProjects();
         loadBlogPosts();
-        testBackendConnection();
-        
-        // Initialize image loading states
-        document.querySelectorAll('img').forEach(img => {
-            img.addEventListener('load', function() {
-                this.style.opacity = '1';
-            });
-            
-            img.addEventListener('error', function() {
-                this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
-            });
-            
-            // Initial state
-            img.style.opacity = '0';
-            img.style.transition = 'opacity 0.3s ease';
-        });
     });
 
-    window.addEventListener('scroll', throttle(checkScroll, 100));
+    window.addEventListener('scroll', checkScroll);
 
     // Floating Action Button - Scroll to Top
     floatingAction.addEventListener('click', () => {
@@ -2025,7 +2008,7 @@
             projectCard.setAttribute('data-categories', project.categories.join(' '));
             
             projectCard.innerHTML = `
-                <img src="${project.image}" alt="${project.title}" class="project-img" loading="lazy">
+                <img src="${project.image}" alt="${project.title}" class="project-img">
                 <div class="project-content">
                     <h3 class="project-title">${project.title}</h3>
                     <p class="project-description">${project.description}</p>
@@ -2088,7 +2071,7 @@
             blogCard.setAttribute('data-category', blog.category);
             
             blogCard.innerHTML = `
-                <img src="${blog.image}" alt="${blog.title}" class="blog-img" loading="lazy">
+                <img src="${blog.image}" alt="${blog.title}" class="blog-img">
                 <div class="blog-content">
                     <h3 class="blog-title">${blog.title}</h3>
                     <div class="blog-meta">
@@ -2120,20 +2103,6 @@
         });
         
         checkScroll();
-    }
-
-    // Test backend connection
-    async function testBackendConnection() {
-        try {
-            const response = await fetch(BACKEND_URL.replace('/messages', '/health'));
-            if (response.ok) {
-                console.log('✅ Backend connection successful');
-            } else {
-                throw new Error('Backend not responding');
-            }
-        } catch (error) {
-            console.error('❌ Backend connection failed:', error);
-        }
     }
 
     // Contact Form Submission - FIXED FOR MONGODB STORAGE
@@ -2215,5 +2184,3 @@
     </script>
 </body>
 </html>
-
-                

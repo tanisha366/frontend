@@ -1099,18 +1099,6 @@
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background: rgba(26, 26, 46, 0.95);
-                flex-direction: column;
-                padding: 2rem;
-                text-align: center;
-            }
-
-            body.light-mode .nav-links {
-                background: rgba(255, 255, 255, 0.95);
             }
 
             .mobile-menu {
@@ -1146,7 +1134,7 @@
             transform: translateY(0);
         }
 
-        /* Blog Section */
+        /* New Blog Enhancements */
         .blog-categories {
             display: flex;
             justify-content: center;
@@ -1214,7 +1202,7 @@
             gap: 0.5rem;
         }
 
-        /* Interactive Elements */
+        /* New Interactive Elements */
         .interactive-card {
             position: relative;
             overflow: hidden;
@@ -1237,7 +1225,7 @@
             opacity: 1;
         }
 
-        /* Floating Action Button */
+        /* New Floating Action Button */
         .floating-action {
             position: fixed;
             bottom: 2rem;
@@ -1255,7 +1243,6 @@
             transition: var(--transition);
             box-shadow: 0 10px 25px rgba(108, 99, 255, 0.3);
             z-index: 100;
-            display: none;
         }
 
         .floating-action:hover {
@@ -1263,7 +1250,7 @@
             box-shadow: 0 15px 30px rgba(108, 99, 255, 0.4);
         }
 
-        /* Gradient Text Effect */
+        /* New Gradient Text Effect */
         .gradient-text {
             background: linear-gradient(45deg, var(--primary), var(--accent), var(--secondary));
             -webkit-background-clip: text;
@@ -1278,7 +1265,7 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* Blog Section */
+        /* Enhanced Blog Section */
         .blog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -1410,10 +1397,10 @@
             <a href="#blog">Blog</a>
         </div>
         <div class="nav-actions">
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode">
+            <button class="theme-toggle" id="themeToggle">
                 <i class="fas fa-moon"></i>
             </button>
-            <button class="mobile-menu" aria-label="Toggle navigation menu">
+            <button class="mobile-menu">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
@@ -1670,14 +1657,8 @@
     const particlesContainer = document.getElementById('particles');
     const floatingAction = document.getElementById('floatingAction');
     const blogCategories = document.querySelectorAll('.blog-category');
-    const mobileMenu = document.querySelector('.mobile-menu');
-    const navLinks = document.querySelector('.nav-links');
 
-    // Backend Configuration - FIXED FOR DEPLOYMENT
-    const BACKEND_URL = window.location.hostname === 'localhost' || 
-                       window.location.hostname === '127.0.0.1' 
-                       ? 'http://localhost:5000/api/messages' 
-                       : '/api/messages'; // Use relative path for production
+const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
 
     // Sample Data
     const projectsData = [
@@ -1895,24 +1876,6 @@
         }
     });
 
-    // Mobile Menu Toggle
-    mobileMenu.addEventListener('click', () => {
-        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
-        mobileMenu.querySelector('i').classList.toggle('fa-bars');
-        mobileMenu.querySelector('i').classList.toggle('fa-times');
-    });
-
-    // Close mobile menu when clicking on a link
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-                navLinks.style.display = 'none';
-                mobileMenu.querySelector('i').classList.add('fa-bars');
-                mobileMenu.querySelector('i').classList.remove('fa-times');
-            }
-        });
-    });
-
     // Check for saved theme preference
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {
@@ -1950,6 +1913,7 @@
         typeWriter();
         loadProjects();
         loadBlogPosts();
+        testBackendConnection();
     });
 
     window.addEventListener('scroll', checkScroll);
@@ -2105,16 +2069,23 @@
         checkScroll();
     }
 
-    // Contact Form Submission - FIXED FOR MONGODB STORAGE
+    // Test backend connection
+    async function testBackendConnection() {
+        try {
+            const response = await fetch('http://localhost:5000/api/health');
+            if (response.ok) {
+                console.log('✅ Backend connection successful');
+            } else {
+                throw new Error('Backend not responding');
+            }
+        } catch (error) {
+            console.error('❌ Backend connection failed:', error);
+        }
+    }
+
+    // Contact Form Submission
     contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-
-        const submitBtn = contactForm.querySelector('.submit-btn');
-        const originalText = submitBtn.innerHTML;
-        
-        // Show loading state
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        submitBtn.disabled = true;
 
         const name = document.getElementById('name').value.trim();
         const email = document.getElementById('email').value.trim();
@@ -2123,37 +2094,29 @@
         // Basic validation
         if (!name || !email || !messageText) {
             showFormMessage('Please fill in all fields', 'error');
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
             return;
         }
 
         if (!validateEmail(email)) {
             showFormMessage('Please enter a valid email address', 'error');
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
             return;
         }
 
         try {
-            console.log('📤 Sending message to backend...', BACKEND_URL);
-            
+            console.log('📤 Sending message to backend...');
             const response = await fetch(BACKEND_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    name: name, 
-                    email: email, 
-                    message: messageText 
-                }),
+                    'Accept': 'application/json',
+                    },
+                body: JSON.stringify({ name, email, message: messageText }),
             });
 
             const result = await response.json();
 
-            if (response.ok) {
-                showFormMessage('✅ Message sent successfully! Your message has been stored in MongoDB.', 'success');
+            if (response.ok && result.success) {
+                showFormMessage('✅ Message sent successfully! Your message has been stored.', 'success');
                 contactForm.reset();
             } else {
                 throw new Error(result.message || result.error || 'Failed to send message');
@@ -2161,10 +2124,6 @@
         } catch (error) {
             console.error('❌ Error sending message:', error);
             showFormMessage('❌ Error sending message: ' + error.message, 'error');
-        } finally {
-            // Restore button state
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
         }
     });
 
@@ -2177,9 +2136,7 @@
         formMessage.textContent = text;
         formMessage.className = `message ${type}`;
         formMessage.style.display = 'block';
-        setTimeout(() => { 
-            formMessage.style.display = 'none'; 
-        }, 5000);
+        setTimeout(() => { formMessage.style.display = 'none'; }, 5000);
     }
     </script>
 </body>

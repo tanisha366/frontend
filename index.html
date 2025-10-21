@@ -1643,7 +1643,7 @@
         <i class="fas fa-arrow-up"></i>
     </div>
 
-    <script>
+    script>
     // DOM Elements
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
@@ -1657,8 +1657,14 @@
     const particlesContainer = document.getElementById('particles');
     const floatingAction = document.getElementById('floatingAction');
     const blogCategories = document.querySelectorAll('.blog-category');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const navLinks = document.querySelector('.nav-links');
 
-const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
+    // Backend Configuration - FIXED FOR DEPLOYMENT
+    const BACKEND_URL = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' 
+                       ? 'http://localhost:5000/api/messages' 
+                       : '/api/messages'; // Use relative path for production
 
     // Sample Data
     const projectsData = [
@@ -1876,6 +1882,24 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
         }
     });
 
+    // Mobile Menu Toggle - NEW FUNCTIONALITY
+    mobileMenu.addEventListener('click', () => {
+        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+        mobileMenu.querySelector('i').classList.toggle('fa-bars');
+        mobileMenu.querySelector('i').classList.toggle('fa-times');
+    });
+
+    // Close mobile menu when clicking on a link
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                navLinks.style.display = 'none';
+                mobileMenu.querySelector('i').classList.add('fa-bars');
+                mobileMenu.querySelector('i').classList.remove('fa-times');
+            }
+        });
+    });
+
     // Check for saved theme preference
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {
@@ -1905,6 +1929,20 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
         });
     };
 
+    // Throttle function for performance
+    function throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        }
+    }
+
     // Initialize animations on page load
     window.addEventListener('load', () => {
         animateSkillBars();
@@ -1914,9 +1952,24 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
         loadProjects();
         loadBlogPosts();
         testBackendConnection();
+        
+        // Initialize image loading states
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('load', function() {
+                this.style.opacity = '1';
+            });
+            
+            img.addEventListener('error', function() {
+                this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
+            });
+            
+            // Initial state
+            img.style.opacity = '0';
+            img.style.transition = 'opacity 0.3s ease';
+        });
     });
 
-    window.addEventListener('scroll', checkScroll);
+    window.addEventListener('scroll', throttle(checkScroll, 100));
 
     // Floating Action Button - Scroll to Top
     floatingAction.addEventListener('click', () => {
@@ -1972,7 +2025,7 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
             projectCard.setAttribute('data-categories', project.categories.join(' '));
             
             projectCard.innerHTML = `
-                <img src="${project.image}" alt="${project.title}" class="project-img">
+                <img src="${project.image}" alt="${project.title}" class="project-img" loading="lazy">
                 <div class="project-content">
                     <h3 class="project-title">${project.title}</h3>
                     <p class="project-description">${project.description}</p>
@@ -2035,7 +2088,7 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
             blogCard.setAttribute('data-category', blog.category);
             
             blogCard.innerHTML = `
-                <img src="${blog.image}" alt="${blog.title}" class="blog-img">
+                <img src="${blog.image}" alt="${blog.title}" class="blog-img" loading="lazy">
                 <div class="blog-content">
                     <h3 class="blog-title">${blog.title}</h3>
                     <div class="blog-meta">
@@ -2072,7 +2125,7 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
     // Test backend connection
     async function testBackendConnection() {
         try {
-            const response = await fetch('http://localhost:5000/api/health');
+            const response = await fetch(BACKEND_URL.replace('/messages', '/health'));
             if (response.ok) {
                 console.log('✅ Backend connection successful');
             } else {
@@ -2083,9 +2136,16 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
         }
     }
 
-    // Contact Form Submission
+    // Contact Form Submission - FIXED FOR MONGODB STORAGE
     contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        const submitBtn = contactForm.querySelector('.submit-btn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        submitBtn.disabled = true;
 
         const name = document.getElementById('name').value.trim();
         const email = document.getElementById('email').value.trim();
@@ -2094,29 +2154,37 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
         // Basic validation
         if (!name || !email || !messageText) {
             showFormMessage('Please fill in all fields', 'error');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
             return;
         }
 
         if (!validateEmail(email)) {
             showFormMessage('Please enter a valid email address', 'error');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
             return;
         }
 
         try {
-            console.log('📤 Sending message to backend...');
+            console.log('📤 Sending message to backend...', BACKEND_URL);
+            
             const response = await fetch(BACKEND_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    },
-                body: JSON.stringify({ name, email, message: messageText }),
+                },
+                body: JSON.stringify({ 
+                    name: name, 
+                    email: email, 
+                    message: messageText 
+                }),
             });
 
             const result = await response.json();
 
-            if (response.ok && result.success) {
-                showFormMessage('✅ Message sent successfully! Your message has been stored.', 'success');
+            if (response.ok) {
+                showFormMessage('✅ Message sent successfully! Your message has been stored in MongoDB.', 'success');
                 contactForm.reset();
             } else {
                 throw new Error(result.message || result.error || 'Failed to send message');
@@ -2124,6 +2192,10 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
         } catch (error) {
             console.error('❌ Error sending message:', error);
             showFormMessage('❌ Error sending message: ' + error.message, 'error');
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         }
     });
 
@@ -2136,8 +2208,12 @@ const BACKEND_URL = 'https://backend-70fc.onrender.com/api/messages';
         formMessage.textContent = text;
         formMessage.className = `message ${type}`;
         formMessage.style.display = 'block';
-        setTimeout(() => { formMessage.style.display = 'none'; }, 5000);
+        setTimeout(() => { 
+            formMessage.style.display = 'none'; 
+        }, 5000);
     }
     </script>
 </body>
 </html>
+
+                
